@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2021-06-07T13:54:36Z</date>
+    <groups>
+        <group>
+            <name>Templates</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Emtool checker</template>
+            <name>Emtool checker</name>
+            <groups>
+                <group>
+                    <name>Templates</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>emtool</name>
+                </application>
+                <application>
+                    <name>Zabbix raw items</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>Metrics data</name>
+                    <type>HTTP_AGENT</type>
+                    <key>emtool.master</key>
+                    <history>3d</history>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>Zabbix raw items</name>
+                        </application>
+                    </applications>
+                    <timeout>5s</timeout>
+                    <url>https://{$SERVER.ADDR}:{$SERVER.PORT}/metrics/{$ACCESS.TOKEN}</url>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>Domain check</name>
+                    <type>DEPENDENT</type>
+                    <key>domain.check</key>
+                    <delay>0</delay>
+                    <lifetime>3d</lifetime>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>Days to expire for {#FQDN}:{#PORT}({#ADDRESS}) on gate {#GATE}</name>
+                            <type>DEPENDENT</type>
+                            <key>days[{#ADDRESS},{#FQDN},{#GATE},{#PORT}]</key>
+                            <delay>0</delay>
+                            <value_type>FLOAT</value_type>
+                            <applications>
+                                <application>
+                                    <name>emtool</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>PROMETHEUS_PATTERN</type>
+                                    <params>{#METRIC}{address=&quot;{#ADDRESS}&quot;,fqdn=&quot;{#FQDN}&quot;,gate=&quot;{#GATE}&quot;,port=&quot;{#PORT}&quot;}
+</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>emtool.master</key>
+                            </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last()}&lt;{$ALERT_THRESHOLD} and {last()}&gt;=0</expression>
+                                    <name>Certificate for {#FQDN} will be expired in {ITEM.VALUE} days</name>
+                                    <priority>AVERAGE</priority>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>emtool.master</key>
+                    </master_item>
+                    <lld_macro_paths>
+                        <lld_macro_path>
+                            <lld_macro>{#METRIC}</lld_macro>
+                            <path>$['name']</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#ADDRESS}</lld_macro>
+                            <path>$.labels['address']</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#FQDN}</lld_macro>
+                            <path>$.labels['fqdn']</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#GATE}</lld_macro>
+                            <path>$.labels['gate']</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#PORT}</lld_macro>
+                            <path>$.labels['port']</path>
+                        </lld_macro_path>
+                    </lld_macro_paths>
+                    <preprocessing>
+                        <step>
+                            <type>PROMETHEUS_TO_JSON</type>
+                            <params>domain_check{address=~&quot;.*&quot;,fqdn=~&quot;.*&quot;,gate=~&quot;.*&quot;,port=~&quot;.*&quot;}</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+                <discovery_rule>
+                    <name>Domain status</name>
+                    <type>DEPENDENT</type>
+                    <key>domain.status</key>
+                    <delay>0</delay>
+                    <lifetime>3d</lifetime>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>Status for {#FQDN}:{#PORT}({#ADDRESS}) on gate {#GATE}</name>
+                            <type>DEPENDENT</type>
+                            <key>status[{#ADDRESS},{#FQDN},{#GATE},{#PORT}]</key>
+                            <delay>0</delay>
+                            <trends>0</trends>
+                            <value_type>TEXT</value_type>
+                            <applications>
+                                <application>
+                                    <name>emtool</name>
+                                </application>
+                            </applications>
+                            <preprocessing>
+                                <step>
+                                    <type>PROMETHEUS_PATTERN</type>
+                                    <params>{#METRIC}{address=&quot;{#ADDRESS}&quot;,fqdn=&quot;{#FQDN}&quot;,gate=&quot;{#GATE}&quot;,port=&quot;{#PORT}&quot;}
+status</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>emtool.master</key>
+                            </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{str(OK)}=0</expression>
+                                    <name>Domain {#FQDN} error: {ITEM.VALUE}</name>
+                                    <priority>AVERAGE</priority>
+                                </trigger_prototype>
+                            </trigger_prototypes>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>emtool.master</key>
+                    </master_item>
+                    <lld_macro_paths>
+                        <lld_macro_path>
+                            <lld_macro>{#ADDRESS}</lld_macro>
+                            <path>$.labels['address']</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#FQDN}</lld_macro>
+                            <path>$.labels['fqdn']</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#GATE}</lld_macro>
+                            <path>$.labels['gate']</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#METRIC}</lld_macro>
+                            <path>$['name']</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#PORT}</lld_macro>
+                            <path>$.labels['port']</path>
+                        </lld_macro_path>
+                    </lld_macro_paths>
+                    <preprocessing>
+                        <step>
+                            <type>PROMETHEUS_TO_JSON</type>
+                            <params>domain_status{address=~&quot;.*&quot;,fqdn=~&quot;.*&quot;,gate=~&quot;.*&quot;,port=~&quot;.*&quot;}</params>
+                        </step>
+                    </preprocessing>
+                </discovery_rule>
+            </discovery_rules>
+            <macros>
+                <macro>
+                    <macro>{$ACCESS.TOKEN}</macro>
+                    <description>Token for access metrics</description>
+                </macro>
+                <macro>
+                    <macro>{$ALERT_THRESHOLD}</macro>
+                    <value>5</value>
+                    <description>Alert before certificate expired.</description>
+                </macro>
+                <macro>
+                    <macro>{$SERVER.ADDR}</macro>
+                    <value>metrics.emtool.org</value>
+                    <description>The address of metrics address</description>
+                </macro>
+                <macro>
+                    <macro>{$SERVER.PORT}</macro>
+                    <value>443</value>
+                    <description>The port of metrics address</description>
+                </macro>
+            </macros>
+        </template>
+    </templates>
+</zabbix_export>
